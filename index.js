@@ -4,11 +4,14 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     path = require('path'),
     request = require('request'),
-    json2csv = require('json2csv');
+    json2csv = require('json2csv'),
+    fs = require('fs');
 
+const FIELDS_ARR = ['name','about','description','name_with_location_descriptor','store_location_descriptor','category','category_list','place_type','current_location','location','hours','price_range','food_styles','overall_star_rating','restaurant_services','restaurant_specialties','parent_page'];
 const NUM_API_CALLS = 500;
 const RADIUS = 500;
-const JURONG_EAST_COORD = [1.3339485, 103.7421645]; // lat, long
+const JURONG_EAST_COORD = [1.3339485, 103.7421645];
+const YEW_TEE_COORD = [1.3957616,103.7445525];
 
 /**
  * Set up application middleware
@@ -21,6 +24,19 @@ function setup() {
   }));
 }
 
+function getFieldsAsURL(fields) {
+  let str = 'fields=';
+  fields.map((field, i) => {
+    if (i == FIELDS_ARR.length - 1) {
+      // Last field has no comma
+      str += field;
+    } else {
+      str += field + ',';
+    }
+  });
+  return str;
+}
+
 function getFBRestaurantsURL(lat, long, radius) {
   const BASE_URL = 'https://graph.facebook.com/v2.10/search?q=&';
   const TYPE = 'type=place&';
@@ -29,7 +45,7 @@ function getFBRestaurantsURL(lat, long, radius) {
   const LIMIT = 'limit=25&';
   const CATEGORIES = "categories=['FOOD_BEVERAGE']&";
   const ACCESS_TOKEN = 'access_token=' + process.env.FB_ACCESS_TOKEN + '&';
-  const FIELDS = 'fields=name,about,description,name_with_location_descriptor,store_location_descriptor,category,category_list,place_type,current_location,location,hours,price_range,food_styles,overall_star_rating,restaurant_services,restaurant_specialties,parent_page';
+  const FIELDS = getFieldsAsURL(FIELDS_ARR);
 
   return BASE_URL + TYPE + CENTER + DISTANCE + LIMIT + CATEGORIES + ACCESS_TOKEN + FIELDS;
 }
@@ -61,16 +77,33 @@ function getFBRestaurantsNearby(url, resultArrSoFar, limit) {
   });
 }
 
-function getAllFBRestaurantsNearby() {
+function getAllFBRestaurantsNearby(lat, long) {
   const SEARCH_QUERY_LIMIT = 250;
-  const URL = getFBRestaurantsURL(1.3339485,103.7421645, 500);
+  const URL = getFBRestaurantsURL(lat, long, 500);
   getFBRestaurantsNearby(URL, [], SEARCH_QUERY_LIMIT).then((result) => {
-    console.log("RESULT: ", result.length);
+    console.log("TOTAL NUM OF RESULTS: ", result.length);
+    console.log(result)
+    // saveAsCSV(result, FIELDS_ARR, 'YEWTEE_500s.csv');
   });
+}
+
+function saveAsCSV(dataToSave, fieldsArr, fileName) {
+  try {
+    let csv = json2csv({ data: dataToSave, fields: fieldsArr });
+    fs.writeFile(fileName, csv, encoding='utf8', (error) => {
+      if (error) {
+        console.error("ERROR while writing as .csv file: ", error);
+      } else {
+        console.log("SUCCESSFULLY WRITTEN", fileName, "TO DISK!");
+      }
+    })
+  } catch(error) {
+    console.error("ERROR while performing JSON to CSV conversion", error);
+  }
 }
 
 //===================
 // RUN
 //===================
 setup();
-getAllFBRestaurantsNearby();
+getAllFBRestaurantsNearby(YEW_TEE_COORD[0], YEW_TEE_COORD[1]);
