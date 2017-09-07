@@ -6,10 +6,9 @@ var express = require('express'),
     request = require('request'),
     json2csv = require('json2csv');
 
+const NUM_API_CALLS = 500;
 const RADIUS = 500;
-
-/* Latitude, Longitude tuples */
-const JURONG_EAST_COORD = [1.3339485, 103.7421645];
+const JURONG_EAST_COORD = [1.3339485, 103.7421645]; // lat, long
 
 /**
  * Set up application middleware
@@ -36,22 +35,37 @@ function getFBRestaurantsURL(lat, long, radius) {
 }
 
 
-function getFBRestaurantsNearby(url) {
-  request(url, function (error, response, body) {
-    if (error) {
-      console.error('ERROR occurred while retrieving restaurant nodes from FB:', error);
-    }
+function getFBRestaurantsNearby(url, resultArrSoFar, limit) {
+  return new Promise((resolve, reject) => {
+    request(url, function (error, response, body) {
+      if (error) {
+        console.error('ERROR occurred while retrieving restaurant nodes from FB:', error);
+        reject(error);
+      }
 
-    if (response && response.statusCode == 200) {
-      console.log('SUCCESS, Status code: ', response.statusCode);
-    }
+      if (response && response.statusCode == 200) {
+        console.log('SUCCESS, Status code: ', response.statusCode);
+      }
 
-    console.log('=== Body Received ===');
-    result = JSON.parse(body);
-    console.log(result);
-    console.log('\n=================');
-    console.log('=== TOTAL: ' + result.data.length + ' ===');
-    console.log('=================');
+      result = JSON.parse(body);
+      resultArrSoFar = resultArrSoFar.concat(result.data);
+
+      if (result.paging) {
+        if (result.paging.next && limit > 0) {
+          // There's still a cursor for next results & we're still within limit
+          return getFBRestaurantsNearby(result.paging.next, resultArrSoFar, limit - result.data.length).then(resolve);
+        }
+      }
+      resolve(resultArrSoFar);
+    });
+  });
+}
+
+function getAllFBRestaurantsNearby() {
+  const SEARCH_QUERY_LIMIT = 250;
+  const URL = getFBRestaurantsURL(1.3339485,103.7421645, 500);
+  getFBRestaurantsNearby(URL, [], SEARCH_QUERY_LIMIT).then((result) => {
+    console.log("RESULT: ", result.length);
   });
 }
 
@@ -59,4 +73,4 @@ function getFBRestaurantsNearby(url) {
 // RUN
 //===================
 setup();
-getFBRestaurantsNearby(getFBRestaurantsURL(1.3339485,103.7421645, 500));
+getAllFBRestaurantsNearby();
