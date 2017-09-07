@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "start-dev": "nodemon index.js",
     "test": "test"
   },
   "keywords": [
@@ -12,5 +13,12 @@
     "Data extraction"
   ],
   "author": "Natasha Koh Sze Sze",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "airtable": "^0.5.0",
+    "body-parser": "^1.17.2",
+    "express": "^4.15.4",
+    "path": "^0.12.7",
+    "request": "^2.81.0"
+  }
 }
