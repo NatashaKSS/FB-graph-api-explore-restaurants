@@ -17,7 +17,9 @@
   "dependencies": {
     "airtable": "^0.5.0",
     "body-parser": "^1.17.2",
+    "dotenv": "^4.0.0",
     "express": "^4.15.4",
+    "json2csv": "^3.11.1",
     "path": "^0.12.7",
     "request": "^2.81.0"
   }
