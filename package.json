@@ -1,0 +1,16 @@
+{
+  "name": "fbgraphapi_restaurant_study",
+  "version": "1.0.0",
+  "description": "To test out FB Graph Search API's accuracy in restaurant data extraction",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "test"
+  },
+  "keywords": [
+    "FB Graph API",
+    "Data extraction"
+  ],
+  "author": "Natasha Koh Sze Sze",
+  "license": "MIT"
+}
